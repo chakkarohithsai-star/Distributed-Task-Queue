@@ -45,11 +45,12 @@ export const initSocket = (server) => {
     // enabling frontend connection
     cors: {
 
-      // frontend url from env
-      origin: process.env.CLIENT_URL,
+      // frontend url from env (allows both production Vercel and local development)
+      origin: [process.env.CLIENT_URL, "https://distributedtaskqueue.vercel.app", "http://localhost:5173"].filter(Boolean),
 
       // allowed methods
       methods: ["GET", "POST"],
+      credentials: true
     },
   });
 

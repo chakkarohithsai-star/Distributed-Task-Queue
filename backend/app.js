@@ -15,7 +15,10 @@ const __dirname = path.dirname(__filename);
 
 // allows backend to accept json data
 app.use(express.json());
-app.use(cors());
+app.use(cors({
+  origin: [process.env.CLIENT_URL, "https://distributedtaskqueue.vercel.app", "http://localhost:5173"].filter(Boolean),
+  credentials: true
+}));
 app.use(cookieParser());
 
 // auth routes
