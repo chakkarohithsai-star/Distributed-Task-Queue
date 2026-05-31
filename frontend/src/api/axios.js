@@ -1,25 +1,9 @@
 // importing axios
 import axios from "axios";
 
-/*
-----------------------------------------------------
-Creating Axios Instance
-----------------------------------------------------
-
-Using deployed backend URL instead of localhost
-
-Because:
-localhost only works on local machine
-
-Production frontend on Vercel must connect
-to deployed Render backend.
-----------------------------------------------------
-*/
+// create axios instance pointing to backend (uses environment variable for production)
 const API = axios.create({
-
-  // backend api base url
-  baseURL:
-    "https://capstone-project-v867.onrender.com/api",
+  baseURL: import.meta.env.VITE_API_URL || "https://capstone-project-v867.onrender.com/api",
 });
 
 /*
