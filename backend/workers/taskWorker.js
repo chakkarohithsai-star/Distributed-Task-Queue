@@ -24,6 +24,11 @@ const redisPublisher = new Redis(process.env.REDIS_URL, {
   maxRetriesPerRequest: null,
 });
 
+// Register error listener to prevent process crashes in deployed environments
+redisPublisher.on("error", (err) => {
+  console.error("[Redis Publisher] Error connecting to Redis server:", err.message);
+});
+
 // creating worker
 const worker = new Worker(
   "taskQueue",

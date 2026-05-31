@@ -18,6 +18,11 @@ export const redisConnection = new Redis(
   }
 );
 
+// Register error listener to prevent process crashes in deployed environments
+redisConnection.on("error", (err) => {
+  console.error("[Redis Connection] Error connecting to Redis server:", err.message);
+});
+
 /*
 ------------------------------------------------
 Optional Default Export

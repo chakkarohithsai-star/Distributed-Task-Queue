@@ -60,6 +60,11 @@ const redisSubscriber = new Redis(
   }
 );
 
+// Register error listener to prevent process crashes in deployed environments
+redisSubscriber.on("error", (err) => {
+  console.error("[Redis Subscriber] Error connecting to Redis server:", err.message);
+});
+
 /*
 ------------------------------------------------
 Subscribing telemetry channel
