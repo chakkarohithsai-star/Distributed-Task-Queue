@@ -1,49 +1,154 @@
+// importing environment variables
 import dotenv from "dotenv";
-import http from "http";
-import Redis from "ioredis";
-import app from "./app.js";
-import { connectDB } from "./config/db.js";
-import { initSocket, getIO } from "./socket/socketServer.js";
 
+// importing node http server
+import http from "http";
+
+// importing redis client
+import Redis from "ioredis";
+
+// importing express app
+import app from "./app.js";
+
+// importing mongodb connection
+import { connectDB } from "./config/db.js";
+
+// importing socket setup
+import {
+  initSocket,
+  getIO,
+} from "./socket/socketServer.js";
+
+// loading .env variables
 dotenv.config();
 
-// connecting mongodb database
+/*
+------------------------------------------------
+Connect MongoDB Database
+------------------------------------------------
+*/
 connectDB();
 
-// wrapping app in http server
+/*
+------------------------------------------------
+Creating HTTP Server
+Socket.io requires raw http server
+------------------------------------------------
+*/
 const server = http.createServer(app);
 
-// initializing socket.io
+/*
+------------------------------------------------
+Initialize Socket.io
+------------------------------------------------
+*/
 initSocket(server);
 
-// Redis subscriber setup
-const redisSubscriber = new Redis(process.env.REDIS_URL, {
-  maxRetriesPerRequest: null,
-});
+/*
+------------------------------------------------
+Redis Subscriber
+Listening realtime task events
+------------------------------------------------
+*/
+const redisSubscriber = new Redis(
 
-redisSubscriber.subscribe("telemetry-updates", (err, count) => {
-  if (err) {
-    console.error("[Redis Pub/Sub] Subscription failed:", err.message);
-  } else {
-    console.log(`[Redis Pub/Sub] Subscribed to telemetry-updates channel (${count} channel active)`);
+  process.env.REDIS_URL,
+
+  {
+    maxRetriesPerRequest: null,
+    enableReadyCheck: false,
   }
-});
+);
 
-redisSubscriber.on("message", (channel, message) => {
-  if (channel === "telemetry-updates") {
-    try {
-      const payload = JSON.parse(message);
-      
-      // Broadcast to all Socket.io clients
-      const io = getIO();
-      io.emit("task:updated", payload);
-    } catch (err) {
-      console.error("[Redis Pub/Sub] Error parsing message:", err);
+/*
+------------------------------------------------
+Subscribing telemetry channel
+------------------------------------------------
+*/
+redisSubscriber.subscribe(
+  "telemetry-updates",
+
+  (err, count) => {
+
+    if (err) {
+
+      console.error(
+        "[Redis Pub/Sub] Subscription failed:",
+        err.message
+      );
+
+    } else {
+
+      console.log(
+        `[Redis Pub/Sub] Subscribed to telemetry-updates (${count})`
+      );
     }
   }
+);
+
+/*
+------------------------------------------------
+Realtime Redis Events
+------------------------------------------------
+*/
+redisSubscriber.on(
+  "message",
+
+  (channel, message) => {
+
+    if (channel === "telemetry-updates") {
+
+      try {
+
+        // parsing redis message
+        const payload =
+          JSON.parse(message);
+
+        // getting socket instance
+        const io = getIO();
+
+        // broadcasting realtime update
+        io.emit(
+          "task:updated",
+          payload
+        );
+
+      } catch (err) {
+
+        console.error(
+          "[Redis Pub/Sub] Parse Error:",
+          err
+        );
+      }
+    }
+  }
+);
+
+/*
+------------------------------------------------
+Health Route
+------------------------------------------------
+*/
+app.get("/", (req, res) => {
+
+  res.send(
+    "AetherQueue Backend Running"
+  );
 });
 
-// starting backend server
-server.listen(process.env.PORT, () => {
-  console.log(`Server Running On ${process.env.PORT}`);
-});
+/*
+------------------------------------------------
+Starting Backend Server
+------------------------------------------------
+*/
+server.listen(
+
+  process.env.PORT || 5000,
+
+  () => {
+
+    console.log(
+      `Server Running On Port ${process.env.PORT}`
+    );
+  }
+);
