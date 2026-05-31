@@ -1,0 +1,51 @@
+### Register Client
+POST http://localhost:5000/api/auth/register
+Content-Type: application/json
+
+{
+  "name":"Rohit",
+  "email":"clien@gmail.com",
+  "password":"123456",
+  "role":"client"
+}
+
+### Register Worker
+POST http://localhost:5000/api/auth/register
+Content-Type: application/json
+
+{
+  "name":"Worker1",
+  "email":"worker@gmail.com",
+  "password":"123456",
+  "role":"worker"
+}
+
+### Login
+POST http://localhost:5000/api/auth/login
+Content-Type: application/json
+
+{
+  "email":"client@gmail.com",
+  "password":"123456"
+}
+
+### Create Project
+POST http://localhost:5000/api/project/create
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjZhMTZhMDU5ODdlNGM0ZTcxYzc1OTc0YyIsInJvbGUiOiJjbGllbnQiLCJpYXQiOjE3Nzk5NTA0MzQsImV4cCI6MTc4MDU1NTIzNH0.6WnW8FyyxOlmmsMpY0itaaPeioksajjiS-5uW8XTnnU
+{
+  "title":"Marketing Project",
+  "tasks":[
+    "Send Email",
+    "Generate Report",
+    "Resize Image"
+  ]
+}
+
+###Get All Projects
+GET http://localhost:5000/api/project/all
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjZhMTZhMDU5ODdlNGM0ZTcxYzc1OTc0YyIsInJvbGUiOiJjbGllbnQiLCJpYXQiOjE3Nzk5NTA0MzQsImV4cCI6MTc4MDU1NTIzNH0.6WnW8FyyxOlmmsMpY0itaaPeioksajjiS-5uW8XTnnU
+
+###
+GET http://localhost:5000/api/project/6a17da7ebd4dbdfb6945e925/tasks
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjZhMTZhMDU5ODdlNGM0ZTcxYzc1OTc0YyIsInJvbGUiOiJjbGllbnQiLCJpYXQiOjE3Nzk5NTA0MzQsImV4cCI6MTc4MDU1NTIzNH0.6WnW8FyyxOlmmsMpY0itaaPeioksajjiS-5uW8XTnnU
