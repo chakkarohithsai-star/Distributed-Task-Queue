@@ -1,69 +1,172 @@
 // importing socket.io server
 import { Server } from "socket.io";
 
-// variable for io access globally
+// variable for global socket access
 let io;
 
-// Map to track active connected nodes (socket.id -> { userId, name, email, role })
+// map for storing active connected users/workers
 const activeNodes = new Map();
 
-// Helper to broadcast active workers list to all clients
+/*
+----------------------------------------------------
+Helper Function
+Broadcast all online workers to frontend
+----------------------------------------------------
+*/
 export const broadcastPresence = () => {
+
+  // safety check
   if (!io) return;
-  const onlineWorkers = Array.from(activeNodes.values())
-    .filter((node) => node.role === "worker");
-  io.emit("workers:presence", onlineWorkers);
+
+  // filtering only workers
+  const onlineWorkers = Array
+    .from(activeNodes.values())
+    .filter(
+      (node) => node.role === "worker"
+    );
+
+  // sending worker presence to frontend
+  io.emit(
+    "workers:presence",
+    onlineWorkers
+  );
 };
 
-// function to initialize socket server
+/*
+----------------------------------------------------
+Initialize Socket Server
+----------------------------------------------------
+*/
 export const initSocket = (server) => {
 
   // creating socket.io server
   io = new Server(server, {
+
+    // enabling frontend connection
     cors: {
+
+      // frontend url from env
       origin: process.env.CLIENT_URL,
+
+      // allowed methods
       methods: ["GET", "POST"],
     },
   });
 
-  // when frontend connects
+  /*
+  ----------------------------------------------------
+  When frontend connects
+  ----------------------------------------------------
+  */
   io.on("connection", (socket) => {
-    console.log("Client Connected:", socket.id);
 
-    // Register node presence (worker or client)
-    socket.on("node:presence", (user) => {
-      if (user && user.userId) {
-        activeNodes.set(socket.id, {
-          socketId: socket.id,
-          userId: user.userId,
-          name: user.name,
-          email: user.email,
-          role: user.role,
-        });
-        console.log(`Registered presence for ${user.role}: ${user.name} (${socket.id})`);
-        broadcastPresence();
+    console.log(
+      "Client Connected:",
+      socket.id
+    );
+
+    /*
+    ----------------------------------------------------
+    Register Worker / Client Presence
+    ----------------------------------------------------
+    */
+    socket.on(
+      "node:presence",
+      (user) => {
+
+        // validation
+        if (user && user.userId) {
+
+          // storing connected user
+          activeNodes.set(
+            socket.id,
+            {
+              socketId: socket.id,
+              userId: user.userId,
+              name: user.name,
+              email: user.email,
+              role: user.role,
+            }
+          );
+
+          console.log(
+            `Registered ${user.role}: ${user.name}`
+          );
+
+          // broadcast updated workers list
+          broadcastPresence();
+        }
       }
-    });
+    );
 
-    // when frontend disconnects
+    /*
+    ----------------------------------------------------
+    Task Updates Event
+    Worker or backend emits realtime task updates
+    ----------------------------------------------------
+    */
+    socket.on(
+      "task:update",
+      (taskData) => {
+
+        // broadcasting update to all clients
+        io.emit(
+          "task:updated",
+          taskData
+        );
+      }
+    );
+
+    /*
+    ----------------------------------------------------
+    Disconnect Event
+    ----------------------------------------------------
+    */
     socket.on("disconnect", () => {
+
+      // checking if socket exists
       if (activeNodes.has(socket.id)) {
-        const node = activeNodes.get(socket.id);
+
+        // getting node
+        const node =
+          activeNodes.get(socket.id);
+
+        // removing node
         activeNodes.delete(socket.id);
-        console.log(`Unregistered presence for ${node.role}: ${node.name}`);
+
+        console.log(
+          `Disconnected ${node.role}: ${node.name}`
+        );
+
+        // rebroadcast worker presence
         broadcastPresence();
       }
-      console.log("Client Disconnected:", socket.id);
+
+      console.log(
+        "Client Disconnected:",
+        socket.id
+      );
     });
   });
 
+  // returning io instance
   return io;
 };
 
-// export io for worker usage
+/*
+----------------------------------------------------
+Global IO Getter
+Used by workers/controllers
+----------------------------------------------------
+*/
 export const getIO = () => {
+
+  // safety check
   if (!io) {
-    throw new Error("Socket.io not initialized");
+
+    throw new Error(
+      "Socket.io not initialized"
+    );
   }
 
   return io;
