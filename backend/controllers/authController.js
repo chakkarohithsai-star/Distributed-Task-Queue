@@ -3,54 +3,78 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
 export const register = async (req, res) => {
-  const { name, email, password, role } = req.body;
+  try {
+    const { name, email, password, role } = req.body;
 
-  const hashedPassword = await bcrypt.hash(password, 10);
+    if (!name || !email || !password || !role) {
+      return res.status(400).json({ message: "All registration parameters are required." });
+    }
 
-  const user = await User.create({
-    name,
-    email,
-    password: hashedPassword,
-    role,
-  });
+    // Check if email already registered
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ message: "Operator email address is already registered." });
+    }
 
-  res.json(user);
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const user = await User.create({
+      name,
+      email,
+      password: hashedPassword,
+      role,
+    });
+
+    res.json(user);
+  } catch (error) {
+    console.error("[Auth Controller] Register Error:", error);
+    res.status(500).json({ message: "Internal server error during operator registration.", details: error.message });
+  }
 };
 
 export const login = async (req, res) => {
-  const { email, password } = req.body;
+  try {
+    const { email, password } = req.body;
 
-  const user = await User.findOne({ email });
-
-  if (!user) {
-    return res.status(404).json({ message: "User Not Found" });
-  }
-
-  const isMatch = await bcrypt.compare(password, user.password);
-
-  if (!isMatch) {
-    return res.status(400).json({ message: "Invalid Password" });
-  }
-
-  // generating jwt token after login success
-  const token = jwt.sign(
-    {
-      id: user._id,
-      role: user.role,
-    },
-    process.env.JWT_SECRET,
-    {
-      expiresIn: "7d",
+    if (!email || !password) {
+      return res.status(400).json({ message: "Both email and password are required." });
     }
-  );
 
-  res.json({
-    token,
-    role: user.role,
-    name: user.name,
-    email: user.email,
-    id: user._id,
-  });
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({ message: "User Not Found" });
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+
+    if (!isMatch) {
+      return res.status(400).json({ message: "Invalid Password" });
+    }
+
+    // generating jwt token after login success
+    const token = jwt.sign(
+      {
+        id: user._id,
+        role: user.role,
+      },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: "7d",
+      }
+    );
+
+    res.json({
+      token,
+      role: user.role,
+      name: user.name,
+      email: user.email,
+      id: user._id,
+    });
+  } catch (error) {
+    console.error("[Auth Controller] Login Error:", error);
+    res.status(500).json({ message: "Internal server error during operator authentication.", details: error.message });
+  }
 };
 
 // Google Single Sign-On / OAuth controller handler
