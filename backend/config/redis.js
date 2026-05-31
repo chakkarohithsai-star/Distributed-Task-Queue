@@ -1,12 +1,26 @@
+// importing ioredis
 import Redis from "ioredis";
 
-// creating redis connection
-const redis = new Redis(
+/*
+------------------------------------------------
+Creating Redis Connection
+------------------------------------------------
+Using Render Redis URL
+------------------------------------------------
+*/
+export const redisConnection = new Redis(
+
   process.env.REDIS_URL,
+
   {
     maxRetriesPerRequest: null,
     enableReadyCheck: false,
   }
 );
 
-export default redis;
+/*
+------------------------------------------------
+Optional Default Export
+------------------------------------------------
+*/
+export default redisConnection;
