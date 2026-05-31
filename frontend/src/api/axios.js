@@ -3,7 +3,7 @@ import axios from "axios";
 
 // create axios instance pointing to backend (uses environment variable for production)
 const API = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "https://distributed-task-queue-kn7y.onrender.com/api",
+  baseURL: import.meta.env.VITE_API_URL || "https://distributed-task-queue-4861.onrender.com/api",
 });
 
 /*
