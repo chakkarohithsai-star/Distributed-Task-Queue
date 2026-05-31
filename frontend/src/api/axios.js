@@ -1,22 +1,66 @@
+// importing axios
 import axios from "axios";
 
-// create axios instance pointing to local backend
+/*
+----------------------------------------------------
+Creating Axios Instance
+----------------------------------------------------
+
+Using deployed backend URL instead of localhost
+
+Because:
+localhost only works on local machine
+
+Production frontend on Vercel must connect
+to deployed Render backend.
+----------------------------------------------------
+*/
 const API = axios.create({
-  baseURL: "http://localhost:5000/api",
+
+  // backend api base url
+  baseURL:
+    "https://capstone-project-v867.onrender.com/api",
 });
 
-// Interceptor to automatically attach JWT token on all outgoing requests
+/*
+----------------------------------------------------
+Axios Request Interceptor
+----------------------------------------------------
+
+Automatically attaches JWT token
+to every API request.
+
+This avoids manually adding headers
+in every request.
+----------------------------------------------------
+*/
 API.interceptors.request.use(
+
+  // before request sent
   (config) => {
-    const token = localStorage.getItem("token");
+
+    // getting token from local storage
+    const token =
+      localStorage.getItem("token");
+
+    // if token exists
     if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+
+      // attaching authorization header
+      config.headers.Authorization =
+        `Bearer ${token}`;
     }
+
+    // returning updated config
     return config;
   },
+
+  // request error handling
   (error) => {
+
     return Promise.reject(error);
   }
 );
 
+// exporting api instance
 export default API;
